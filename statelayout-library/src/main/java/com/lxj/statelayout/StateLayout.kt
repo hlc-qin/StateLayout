@@ -14,7 +14,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import com.lxj.statelayout.State.*
 
-class StateLayout @JvmOverloads constructor(context: Context, attributeSet: AttributeSet? = null, defStyleAttr: Int = 0)
+open class StateLayout @JvmOverloads constructor(context: Context, attributeSet: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attributeSet, defStyleAttr) {
     var state = None // default state
     var loadingView: View? = null
