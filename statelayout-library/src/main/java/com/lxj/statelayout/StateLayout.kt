@@ -7,6 +7,7 @@ import android.content.Context
 import android.graphics.Color
 import androidx.fragment.app.Fragment
 import android.util.AttributeSet
+import android.util.Log
 import android.view.*
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -28,11 +29,9 @@ open class StateLayout @JvmOverloads constructor(context: Context, attributeSet:
     var enableTouchWhenLoading = false
     var defaultShowLoading = false
     var noEmptyAndError = false //是否去除empty和error状态，有时候只需要一个loading状态，这样减少内存
-    var showLoadingOnce = false //是否只显示一次Loading
     var loadingLayoutId = 0
     var emptyLayoutId = 0
     var errorLayoutId = 0
-    private var hasShowLoading = false
 
     init {
         val ta = context.obtainStyledAttributes(attributeSet, R.styleable.StateLayout)
@@ -45,7 +44,6 @@ open class StateLayout @JvmOverloads constructor(context: Context, attributeSet:
         enableTouchWhenLoading = ta.getBoolean(R.styleable.StateLayout_sl_enableTouchWhenLoading, false)
         defaultShowLoading = ta.getBoolean(R.styleable.StateLayout_sl_defaultShowLoading, false)
         noEmptyAndError = ta.getBoolean(R.styleable.StateLayout_sl_noEmptyAndError, false)
-        showLoadingOnce = ta.getBoolean(R.styleable.StateLayout_sl_showLoadingOnce, false)
         emptyText = ta.getString(R.styleable.StateLayout_sl_emptyText) ?: "暂无数据"
         ta.recycle()
     }
@@ -97,7 +95,8 @@ open class StateLayout @JvmOverloads constructor(context: Context, attributeSet:
         }
     }
 
-    private fun switchLayout(s: State) {
+    private fun switchLayout(s: State, forceSwitch : Boolean =false) {
+        if (state == s && !forceSwitch) return
         state = s
         when (state) {
             Loading -> {
@@ -124,9 +123,7 @@ open class StateLayout @JvmOverloads constructor(context: Context, attributeSet:
     }
 
     fun showLoading(): StateLayout {
-        if(showLoadingOnce && hasShowLoading) return this
         switchLayout(Loading)
-        if(showLoadingOnce) hasShowLoading = true
         return this
     }
 
@@ -146,6 +143,7 @@ open class StateLayout @JvmOverloads constructor(context: Context, attributeSet:
 
     fun showError(): StateLayout {
         if(noEmptyAndError) {
+            Log.e("tag", "no error show content")
             switchLayout(Content)
         }else{
             switchLayout(Error)
@@ -163,7 +161,6 @@ open class StateLayout @JvmOverloads constructor(context: Context, attributeSet:
 
     private fun retry() {
         if (errorView == null) return
-        hasShowLoading = false
         showLoading()
         handler.postDelayed({
             mRetryAction?.invoke(errorView!!)
@@ -297,7 +294,6 @@ open class StateLayout @JvmOverloads constructor(context: Context, attributeSet:
                defaultShowLoading: Boolean = false,
                enableLoadingShadow: Boolean = false,
                enableTouchWhenLoading: Boolean = false,
-               showLoadingOnce: Boolean = false,
                retryAction: ((errView: View) -> Unit)? = null): StateLayout {
         this.emptyText = emptyText
         this.emptyIcon = emptyIcon
@@ -323,7 +319,6 @@ open class StateLayout @JvmOverloads constructor(context: Context, attributeSet:
         if(defaultShowLoading) this.defaultShowLoading = defaultShowLoading
         if(enableLoadingShadow) this.enableLoadingShadow = enableLoadingShadow
         if(enableTouchWhenLoading) this.enableTouchWhenLoading = enableTouchWhenLoading
-        if(showLoadingOnce) this.showLoadingOnce = showLoadingOnce
         mRetryAction = retryAction
         return this
     }
